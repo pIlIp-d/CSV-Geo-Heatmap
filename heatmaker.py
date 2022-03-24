@@ -1,13 +1,22 @@
+# -*- coding: utf-8 -*-
+# ==================================================================
+#   csv geo heatmap - a tool for converting csv to html heatmap  
+#
+#   Copyright 2022 Philip Dell - https://github.com/pIlIp-d
+#   MIT License
+# ==================================================================
+
 import os, sys
+import argparse
 
 import pandas as pd
 from folium import Map
 from folium.plugins import HeatMap
 
-def read_file(file, enc = 'latin1'):
+def read_file(file, enc):
     return pd.read_csv(file, encoding=enc)
 
-def create_map(df, start_location, zoom_factor = 8):
+def create_map(df, start_location, zoom_factor):
     #df             - contains langitude and latitude values for each DataPoint
     #start_location - contains [lat,long]
     return Map(location=start_location, zoom_start=zoom_factor, ).add_child(
@@ -24,15 +33,14 @@ def save(map, path):
     map.save(path, 'w+')
 
 if __name__ == '__main__':
-    if len(sys.argv) > 2:
-        if (sys.argv[1] == '-p'):
-            csv_path = sys.argv[2]
-    else:
-        print("Missing path argunment! -p 'path'")
-        quit(-1)
+    all_args = argparse.ArgumentParser(prog='Heatmaker', usage='%(prog)s [options]', description='Converts .csv with latitude and longitude columns into geo-heatmap.')
+    all_args.add_argument("-p", "--path", required=True, help="path to csv file")
+    all_args.add_argument("-e", "--encoding", required=False, default='latin1')
+    all_args.add_argument("-z", "--zoom_at_start", required=False, type=int, default=8)
+    args = vars(all_args.parse_args())
     print("reading data.")
-    map_data = read_file(csv_path)
+    map_data = read_file(args['path'],args['encoding'])
     print("creating map.")
-    map = create_map(map_data, [49.4076800, 8.6907900])
-    save(map, os.path.join('results', 'heatmap.html'))
+    map = create_map(map_data, [49.4076800, 8.6907900], args['zoom_at_start'])
+    save(map, 'heatmap.html')
     print("Done!")
